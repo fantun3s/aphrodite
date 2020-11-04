@@ -1,17 +1,17 @@
 import {
-    CSSProperties,
-    CSSPropertiesComplete,
-    CSSPropertiesLossy,
-    CSSPropertiesPseudo,
-    CSSWideKeyword,
-} from './css-properties';
+  CSSProperties,
+  CSSPropertiesComplete,
+  CSSPropertiesLossy,
+  CSSPropertiesPseudo,
+  CSSWideKeyword,
+} from "./css-properties";
 
 export {
-    CSSProperties,
-    CSSPropertiesComplete,
-    CSSPropertiesLossy,
-    CSSPropertiesPseudo,
-    CSSWideKeyword,
+  CSSProperties,
+  CSSPropertiesComplete,
+  CSSPropertiesLossy,
+  CSSPropertiesPseudo,
+  CSSWideKeyword,
 };
 
 /**
@@ -19,7 +19,7 @@ export {
  */
 export type StyleDeclarationMap = Map<keyof CSSProperties, string | number>;
 export type StyleDeclaration<T = {}> = {
-    [P in keyof T]: CSSProperties | StyleDeclarationMap;
+  [P in keyof T]: CSSProperties | StyleDeclarationMap;
 };
 
 /**
@@ -28,18 +28,18 @@ export type StyleDeclaration<T = {}> = {
 export type StyleDeclarationValue = object;
 
 export interface StyleSheetStatic {
-    /**
-     * Create style sheet
-     */
-    create<T>(
-        styles: StyleDeclaration<T>
-    ): {[K in keyof T]: StyleDeclarationValue };
-    /**
-     * Rehydrate class names from server renderer
-     */
-    rehydrate(renderedClassNames: string[]): void;
+  /**
+   * Create style sheet
+   */
+  create<T>(
+    styles: StyleDeclaration<T>
+  ): { [K in keyof T]: StyleDeclarationValue };
+  /**
+   * Rehydrate class names from server renderer
+   */
+  rehydrate(renderedClassNames: string[]): void;
 
-    extend(extensions: Extension[]): Exports;
+  extend(extensions: Extension[]): Exports;
 }
 
 export var StyleSheet: StyleSheetStatic;
@@ -61,60 +61,76 @@ export function reset(): void;
 
 export function resetInjectedStyle(key: string): void;
 
-interface StaticRendererResult {
-    html: string;
-    css: {
-        content: string;
-        renderedClassNames: string[];
-    };
+export interface StaticRendererResult {
+  html: string;
+  css: {
+    content: string;
+    renderedClassNames: string[];
+  };
 }
 
 /**
  * Utilities for using Aphrodite server-side.
  */
 interface StyleSheetServerStatic {
-    renderStatic(renderFunc: () => string): StaticRendererResult;
+  renderStatic(renderFunc: () => string): StaticRendererResult;
+  /**
+   * Prevent styles from being injected into the DOM.
+   *
+   * This is useful in situations where you do not have an available DOM
+   * but are still considering walking the tree without calling a renderFunc
+   *
+   * Should be paired with a subsequent call to
+   * clearBufferAndResumeStyleInjection.
+   */
+  suppressStyleInjection(): void;
+  /**
+   * Opposite method of suppressStyleInjection.
+   */
+  clearBufferAndResumeStyleInjection(): void;
 }
 
 export var StyleSheetServer: StyleSheetServerStatic;
 
 interface StyleSheetTestUtilsStatic {
-    /**
-     * Prevent styles from being injected into the DOM.
-     *
-     * This is useful in situations where you'd like to test rendering UI
-     * components which use Aphrodite without any of the side-effects of
-     * Aphrodite happening. Particularly useful for testing the output of
-     * components when you have no DOM, e.g. testing in Node without a fake DOM.
-     *
-     * Should be paired with a subsequent call to
-     * clearBufferAndResumeStyleInjection.
-     */
-    suppressStyleInjection(): void;
-    /**
-     * Opposite method of preventStyleInject.
-     */
-    clearBufferAndResumeStyleInjection(): void;
-    /**
-     * Returns a string of buffered styles which have not been flushed
-     *
-     * @returns {string}  Buffer of styles which have not yet been flushed.
-     */
-    getBufferedStyles(): string[];
+  /**
+   * Prevent styles from being injected into the DOM.
+   *
+   * This is useful in situations where you'd like to test rendering UI
+   * components which use Aphrodite without any of the side-effects of
+   * Aphrodite happening. Particularly useful for testing the output of
+   * components when you have no DOM, e.g. testing in Node without a fake DOM.
+   *
+   * Should be paired with a subsequent call to
+   * clearBufferAndResumeStyleInjection.
+   */
+  suppressStyleInjection(): void;
+  /**
+   * Opposite method of preventStyleInject.
+   */
+  clearBufferAndResumeStyleInjection(): void;
+  /**
+   * Returns a string of buffered styles which have not been flushed
+   *
+   * @returns {string}  Buffer of styles which have not yet been flushed.
+   */
+  getBufferedStyles(): string[];
 }
 
 export var StyleSheetTestUtils: StyleSheetTestUtilsStatic;
 
 export interface SelectorHandler {
-    (selector: string, baseSelector: string, callback: (selector: string) => string):
-        | string
-        | null;
+  (
+    selector: string,
+    baseSelector: string,
+    callback: (selector: string) => string
+  ): string | null;
 }
 
 export interface Extension {
-    selectorHandler?: SelectorHandler;
+  selectorHandler?: SelectorHandler;
 }
-                             
+
 export function flushToStyleTag(): void;
 
 /**
@@ -122,9 +138,9 @@ export function flushToStyleTag(): void;
  * properties on it.
  */
 interface Exports {
-    css(...styles: CSSInputTypes[]): string;
-    StyleSheet: StyleSheetStatic;
-    StyleSheetServer: StyleSheetServerStatic;
-    StyleSheetTestUtils: StyleSheetTestUtilsStatic;
-    flushToStyleTag(): void;
+  css(...styles: CSSInputTypes[]): string;
+  StyleSheet: StyleSheetStatic;
+  StyleSheetServer: StyleSheetServerStatic;
+  StyleSheetTestUtils: StyleSheetTestUtilsStatic;
+  flushToStyleTag(): void;
 }

@@ -3,6 +3,8 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 function _typeof(obj) {
+  "@babel/helpers - typeof";
+
   if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
     _typeof = function (obj) {
       return typeof obj;
@@ -31,43 +33,71 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
-function _objectSpread(target) {
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
   for (var i = 1; i < arguments.length; i++) {
     var source = arguments[i] != null ? arguments[i] : {};
-    var ownKeys = Object.keys(source);
 
-    if (typeof Object.getOwnPropertySymbols === 'function') {
-      ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-      }));
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
     }
-
-    ownKeys.forEach(function (key) {
-      _defineProperty(target, key, source[key]);
-    });
   }
 
   return target;
 }
 
 function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
 }
 
 function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-    return arr2;
-  }
+  if (Array.isArray(arr)) return _arrayLikeToArray(arr);
 }
 
 function _iterableToArray(iter) {
-  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+  if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
+}
+
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+  return arr2;
 }
 
 function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance");
+  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
 function hash(str) {
@@ -548,9 +578,7 @@ RawTask.prototype.call = function () {
 /* @flow */
 var MAP_EXISTS = typeof Map !== 'undefined';
 
-var OrderedElements =
-/*#__PURE__*/
-function () {
+var OrderedElements = /*#__PURE__*/function () {
   /* ::
   elements: {[string]: any};
   keyOrder: string[];
@@ -1156,6 +1184,10 @@ function isSimplePositionValue(value) {
   return typeof value === 'number' && !isNaN(value);
 }
 
+function isComplexSpanValue(value) {
+  return typeof value === 'string' && value.includes('/');
+}
+
 var alignmentValues = ['center', 'end', 'start', 'stretch'];
 
 var displayValues = {
@@ -1173,16 +1205,26 @@ var propertyConverters = {
   gridColumn: function gridColumn(value, style) {
     if (isSimplePositionValue(value)) {
       style.msGridColumn = value;
-    } else {
-      var _value$split$map = value.split('/').map(function (position) {
-        return +position;
-      }),
-          _value$split$map2 = _slicedToArray(_value$split$map, 2),
-          start = _value$split$map2[0],
-          end = _value$split$map2[1];
+    } else if (isComplexSpanValue(value)) {
+      var _value$split = value.split('/'),
+          _value$split2 = _slicedToArray(_value$split, 2),
+          start = _value$split2[0],
+          end = _value$split2[1];
 
-      propertyConverters.gridColumnStart(start, style);
-      propertyConverters.gridColumnEnd(end, style);
+      propertyConverters.gridColumnStart(+start, style);
+
+      var _end$split = end.split(/ ?span /),
+          _end$split2 = _slicedToArray(_end$split, 2),
+          maybeSpan = _end$split2[0],
+          maybeNumber = _end$split2[1];
+
+      if (maybeSpan === '') {
+        propertyConverters.gridColumnEnd(+start + +maybeNumber, style);
+      } else {
+        propertyConverters.gridColumnEnd(+end, style);
+      }
+    } else {
+      propertyConverters.gridColumnStart(value, style);
     }
   },
 
@@ -1203,16 +1245,26 @@ var propertyConverters = {
   gridRow: function gridRow(value, style) {
     if (isSimplePositionValue(value)) {
       style.msGridRow = value;
-    } else {
-      var _value$split$map3 = value.split('/').map(function (position) {
-        return +position;
-      }),
-          _value$split$map4 = _slicedToArray(_value$split$map3, 2),
-          start = _value$split$map4[0],
-          end = _value$split$map4[1];
+    } else if (isComplexSpanValue(value)) {
+      var _value$split3 = value.split('/'),
+          _value$split4 = _slicedToArray(_value$split3, 2),
+          start = _value$split4[0],
+          end = _value$split4[1];
 
-      propertyConverters.gridRowStart(start, style);
-      propertyConverters.gridRowEnd(end, style);
+      propertyConverters.gridRowStart(+start, style);
+
+      var _end$split3 = end.split(/ ?span /),
+          _end$split4 = _slicedToArray(_end$split3, 2),
+          maybeSpan = _end$split4[0],
+          maybeNumber = _end$split4[1];
+
+      if (maybeSpan === '') {
+        propertyConverters.gridRowEnd(+start + +maybeNumber, style);
+      } else {
+        propertyConverters.gridRowEnd(+end, style);
+      }
+    } else {
+      propertyConverters.gridRowStart(value, style);
     }
   },
 
@@ -1400,7 +1452,8 @@ function hyphenateStyleName(name) {
 }
 
 var hyphenateStyleName$1 = /*#__PURE__*/Object.freeze({
-  default: hyphenateStyleName
+  __proto__: null,
+  'default': hyphenateStyleName
 });
 
 var _hyphenateStyleName = getCjsExportFromNamespace(hyphenateStyleName$1);
@@ -1549,32 +1602,32 @@ var staticData = {
     "animationName": w,
     "animationPlayState": w,
     "animationTimingFunction": w,
-    "appearance": wm,
+    "appearance": wmms,
     "userSelect": wmms,
     "fontKerning": w,
-    "textEmphasisPosition": w,
-    "textEmphasis": w,
-    "textEmphasisStyle": w,
-    "textEmphasisColor": w,
-    "boxDecorationBreak": w,
+    "textEmphasisPosition": wms,
+    "textEmphasis": wms,
+    "textEmphasisStyle": wms,
+    "textEmphasisColor": wms,
+    "boxDecorationBreak": wms,
     "clipPath": w,
-    "maskImage": w,
-    "maskMode": w,
-    "maskRepeat": w,
-    "maskPosition": w,
-    "maskClip": w,
-    "maskOrigin": w,
-    "maskSize": w,
-    "maskComposite": w,
-    "mask": w,
-    "maskBorderSource": w,
-    "maskBorderMode": w,
-    "maskBorderSlice": w,
-    "maskBorderWidth": w,
-    "maskBorderOutset": w,
-    "maskBorderRepeat": w,
-    "maskBorder": w,
-    "maskType": w,
+    "maskImage": wms,
+    "maskMode": wms,
+    "maskRepeat": wms,
+    "maskPosition": wms,
+    "maskClip": wms,
+    "maskOrigin": wms,
+    "maskSize": wms,
+    "maskComposite": wms,
+    "mask": wms,
+    "maskBorderSource": wms,
+    "maskBorderMode": wms,
+    "maskBorderSlice": wms,
+    "maskBorderWidth": wms,
+    "maskBorderOutset": wms,
+    "maskBorderRepeat": wms,
+    "maskBorder": wms,
+    "maskType": wms,
     "textDecorationStyle": wm,
     "textDecorationSkip": wm,
     "textDecorationLine": wm,
@@ -1594,7 +1647,7 @@ var staticData = {
     "columns": wm,
     "columnSpan": wm,
     "columnWidth": wm,
-    "writingMode": wms,
+    "writingMode": w,
     "flex": wms,
     "flexBasis": w,
     "flexDirection": wms,
@@ -2204,6 +2257,11 @@ var reset = function reset() {
   isBuffering = false;
   styleTag = null;
 };
+var resetInjectedStyle = function resetInjectedStyle(key
+/* : string */
+) {
+  delete alreadyInjected[key];
+};
 var startBuffering = function startBuffering() {
   if (isBuffering) {
     throw new Error("Cannot buffer while already buffering");
@@ -2242,6 +2300,12 @@ var addRenderedClassNames = function addRenderedClassNames(classNames
   });
 };
 
+var isValidStyleDefinition = function isValidStyleDefinition(def
+/* : Object */
+) {
+  return "_definition" in def && "_name" in def && "_len" in def;
+};
+
 var processStyleDefinitions = function processStyleDefinitions(styleDefinitions
 /* : any[] */
 , classNameBits
@@ -2260,10 +2324,12 @@ var processStyleDefinitions = function processStyleDefinitions(styleDefinitions
       if (Array.isArray(styleDefinitions[i])) {
         // We've encountered an array, so let's recurse
         length += processStyleDefinitions(styleDefinitions[i], classNameBits, definitionBits, length);
-      } else {
+      } else if (isValidStyleDefinition(styleDefinitions[i])) {
         classNameBits.push(styleDefinitions[i]._name);
         definitionBits.push(styleDefinitions[i]._definition);
         length += styleDefinitions[i]._len;
+      } else {
+        throw new Error("Invalid Style Definition: Styles should be defined using the StyleSheet.create method.");
       }
     }
   }
@@ -2336,7 +2402,7 @@ var unminifiedHashFn = function unminifiedHashFn(str
 
 
 var initialHashFn = function initialHashFn() {
-  return hashString;
+  return  hashString ;
 };
 var hashFn = initialHashFn();
 var StyleSheet = {
@@ -2394,6 +2460,27 @@ var StyleSheetServer = typeof window !== 'undefined' ? null : {
         renderedClassNames: getRenderedClassNames()
       }
     };
+  },
+
+  /**
+   * Prevent styles from being injected into the DOM.
+   *
+   * This is useful in situations where you do not have an available DOM
+   * but are still considering walking the tree without calling a renderFunc
+   *
+   * Should be paired with a subsequent call to
+   * clearBufferAndResumeStyleInjection.
+   */
+  suppressStyleInjection: function suppressStyleInjection() {
+    reset();
+    startBuffering();
+  },
+
+  /**
+  * Opposite method of suppressStyleInjection.
+  */
+  clearBufferAndResumeStyleInjection: function clearBufferAndResumeStyleInjection() {
+    reset();
   }
 };
 /**
@@ -2402,7 +2489,7 @@ var StyleSheetServer = typeof window !== 'undefined' ? null : {
  * Not meant to be used in production.
  */
 
-var StyleSheetTestUtils = null;
+var StyleSheetTestUtils =  null ;
 /**
  * Generate the Aphrodite API exports, with given `selectorHandlers` and
  * `useImportant` state.
@@ -2415,7 +2502,7 @@ function makeExports(useImportant
   /* : SelectorHandler[] */
   = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultSelectorHandlers;
   return {
-    StyleSheet: _objectSpread({}, StyleSheet, {
+    StyleSheet: _objectSpread2(_objectSpread2({}, StyleSheet), {}, {
       /**
        * Returns a version of the exports of Aphrodite (i.e. an object
        * with `css` and `StyleSheet` properties) which have some
@@ -2463,7 +2550,9 @@ function makeExports(useImportant
     },
     flushToStyleTag: flushToStyleTag,
     injectAndGetClassName: injectAndGetClassName,
-    defaultSelectorHandlers: defaultSelectorHandlers
+    defaultSelectorHandlers: defaultSelectorHandlers,
+    reset: reset,
+    resetInjectedStyle: resetInjectedStyle
   };
 }
 
@@ -2477,7 +2566,9 @@ var StyleSheet$1 = Aphrodite.StyleSheet,
     minify = Aphrodite.minify,
     flushToStyleTag$1 = Aphrodite.flushToStyleTag,
     injectAndGetClassName$1 = Aphrodite.injectAndGetClassName,
-    defaultSelectorHandlers$1 = Aphrodite.defaultSelectorHandlers;
+    defaultSelectorHandlers$1 = Aphrodite.defaultSelectorHandlers,
+    reset$1 = Aphrodite.reset,
+    resetInjectedStyle$1 = Aphrodite.resetInjectedStyle;
 
 exports.StyleSheet = StyleSheet$1;
 exports.StyleSheetServer = StyleSheetServer$1;
@@ -2487,3 +2578,5 @@ exports.defaultSelectorHandlers = defaultSelectorHandlers$1;
 exports.flushToStyleTag = flushToStyleTag$1;
 exports.injectAndGetClassName = injectAndGetClassName$1;
 exports.minify = minify;
+exports.reset = reset$1;
+exports.resetInjectedStyle = resetInjectedStyle$1;
